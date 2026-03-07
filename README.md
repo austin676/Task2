@@ -209,24 +209,24 @@ Users can:
 
 ---
 
-## Example Terminal Output
+## Terminal Outputs
 
 ### Adding Transactions
 
 ```
-![Add Transaction](Terminal Outputs/Tx Added.png)
+![Add Transaction](outputs/Tx Added.png)
 ```
 
 ### Viewing Ledger
 
 ```
-![View Ledger](Terminal Outputs/Tx View.png)
+![View Ledger](outputs/Tx View.png)
 ```
 
 ### Ledger Validation and Corruption
 
 ```
-![Valid Transaction](Terminal Outputs/Tx Valid.png)
+![Valid Transaction](outputs/Tx Valid and Corrupted.png)
 ```
 
 ## Technologies Used
