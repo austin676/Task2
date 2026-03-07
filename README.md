@@ -214,19 +214,19 @@ Users can:
 ### Adding Transactions
 
 ```
-![Add Transaction](outputs/Tx Added.png)
+![Add Transaction](C:\Users\Acer\Desktop\deterministic-ledger\outputs\Tx Added.png)
 ```
 
 ### Viewing Ledger
 
 ```
-![View Ledger](outputs/Tx View.png)
+![View Ledger](C:\Users\Acer\Desktop\deterministic-ledger\outputs\Tx View.png)
 ```
 
 ### Ledger Validation and Corruption
 
 ```
-![Valid Transaction](outputs/Tx Valid and Corrupted.png)
+![Valid Transaction](C:\Users\Acer\Desktop\deterministic-ledger\outputs\Tx Valid and Corrupted.png)
 ```
 
 ## Technologies Used
