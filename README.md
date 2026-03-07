@@ -214,61 +214,20 @@ Users can:
 ### Adding Transactions
 
 ```
-1 Add Transaction
-Enter transaction data:
-Austin Pays Arpit
-Transaction Added
-
-1 Add Transaction
-Enter transaction data:
-Arpit Pays Austin
-Transaction Added
-
-
+![Add Transaction](Terminal Outputs/Tx Added.png)
 ```
 
 ### Viewing Ledger
 
 ```
---- Ledger Transactions ---
-
-ID: 0
-Timestamp: 2026-03-07 22:02:49
-Data: Austin Pays Arpit
-Hash: 599de858d72b18cacbd20ec4c26079716b1f275edc36ad91fbbade3c4504463e
-PrevHash: GENESIS
-
-ID: 1
-Timestamp: 2026-03-07 22:03:06
-Data: Arpit Pays Austin
-Hash: b1d84ad60bf2736471e24aa2020044b704392c39256d32aac24c8fc412c80d46
-PrevHash: 599de858d72b18cacbd20ec4c26079716b1f275edc36ad91fbbade3c4504463e
+![View Ledger](Terminal Outputs/Tx View.png)
 ```
 
-### Ledger Validation
+### Ledger Validation and Corruption
 
 ```
-3 Validate Ledger
-Ledger VALID
+![Valid Transaction](Terminal Outputs/Tx Valid.png)
 ```
-
-### Corruption Simulation
-
-```
-4 Corrupt Ledger
-Ledger has been intentionally corrupted
-```
-
-### Tamper Detection
-
-```
-3 Validate Ledger
-Ledger INVALID
-```
-
-This demonstrates that the system correctly detects ledger corruption.
-
----
 
 ## Technologies Used
 
