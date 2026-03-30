@@ -11,8 +11,6 @@ The objective of this project is to demonstrate the core principles behind block
 - Tamper detection
 - Ledger validation and replay
 
-> This implementation focuses only on ledger integrity, not networking, consensus mechanisms, or cryptocurrency logic.
-
 ---
 
 ## Determinism Explanation
