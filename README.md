@@ -2,226 +2,72 @@
 
 ## Overview
 
-This project implements a minimal deterministic ledger system using Go.
+This project implements a deterministic, replayable, self-verifying ledger system using Go.
 The system records transactions and links them together using SHA256 hash chaining to preserve data integrity.
 
 The objective of this project is to demonstrate the core principles behind blockchain systems:
-
 - Deterministic hashing
 - Hash chaining
 - Tamper detection
-- Ledger validation
+- Ledger validation and replay
 
 > This implementation focuses only on ledger integrity, not networking, consensus mechanisms, or cryptocurrency logic.
 
 ---
 
-## Ledger Structure
+## Determinism Explanation
 
-The ledger consists of a list of transactions. Each transaction contains specific fields that allow the system to verify integrity.
+In a fully deterministic system, the same sequence of inputs must always produce the exact same sequence of outputs, hashes, and final states. 
+To achieve this:
+- **No Randomness**: We removed all sources of entropy (such as `time.Now()` or external timestamping).
+- **Pure Functions**: The `NewTransaction` function constructs transactions without relying on any external application state.
+- **Strict Hash Formula**: Every hash is computed solely based on `ID + Data + PreviousHash`.
 
-### Transaction Fields
-
-| Field          | Description                                  |
-|----------------|----------------------------------------------|
-| `ID`           | Unique identifier for the transaction        |
-| `Timestamp`    | Time when the transaction was created        |
-| `Data`         | Transaction information entered by the user  |
-| `PreviousHash` | Hash of the previous transaction             |
-| `Hash`         | SHA256 hash generated from transaction data  |
-
-### Transaction Structure (Go)
-
-```go
-type Transaction struct {
-    ID           int
-    Timestamp    string
-    Data         string
-    PreviousHash string
-    Hash         string
-}
-```
-
-### Ledger Structure
-
-The ledger stores all transactions.
-
-```go
-type Ledger struct {
-    Transactions []Transaction
-}
-```
-
-Example structure:
-
-```
-Ledger
- ├── Transaction 0
- ├── Transaction 1
- └── Transaction 2
-```
-
-Each transaction references the previous transaction's hash.
+By making the ledger completely deterministic, we can guarantee that if two programs process the exact same sequence of transactions (e.g., `A → B → C`), their final state hashes will always be perfectly identical.
 
 ---
 
-## Hash Chain Purpose
+## Replay Explanation
 
-The system uses a hash chain to maintain ledger integrity.
+The system features a **Replay Engine** (`ReplayLedger`) which allows the entire transaction history to be recalculated from scratch.
 
-**Example:**
+During a replay sequence, the engine iterates through the provided chain of transactions from index `0`. For each transaction, it:
+1. Recalculates the transaction hash dynamically based strictly on its `ID`, `Data`, and `PreviousHash`.
+2. Compares the derived hash against the transaction's stored `Hash`.
+3. Verifies that the transaction's `PreviousHash` identically matches the `Hash` of the immediately preceding transaction (or `"GENESIS"` if it is the first node).
 
-```
-Transaction 0
-  Data:     Austin Pays Arpit
-  Hash:     H0
-  PrevHash: GENESIS
-
-Transaction 1
-  Data:     Arpit Pays Austin
-  Hash:     H1
-  PrevHash: H0
-```
-
-If someone modifies Transaction 0:
-
-```
-Data: HACKED DATA
-```
-
-The recalculated hash becomes different:
-
-```
-New Hash ≠ H0
-```
-
-Since Transaction 1 still references `H0`, the chain breaks and the ledger becomes invalid.
-
-This mechanism ensures tamper detection.
+If the engine can successfully replay the entire ledger without discrepancies, the ledger's integrity is guaranteed.
 
 ---
 
-## Deterministic Hashing (SHA256)
+## Failure Scenarios
 
-The system uses the SHA256 hashing algorithm.
+The validation and replay engine will intercept and clearly detail exact causes of tampering:
 
-Each transaction hash is generated using:
+### Hash Mismatch
+If a transaction's `Data`, `ID`, or `PreviousHash` is artificially modified after creation, the recalculated SHA256 hash will not reflect its stored `.Hash` value. The system will throw: `"Hash mismatch at Tx X"`.
 
-```
-ID + Timestamp + Data + PreviousHash
-```
-
-**Example input:**
-
-```
-ID:0
-Timestamp:2026-03-07 22:02:49
-Data:Austin Pays Arpit
-PreviousHash:GENESIS
-```
-
-**Example output hash:**
-
-```
-599de858d72b18cacbd20ec4c26079716b1f275edc36ad91fbbade3c4504463e
-```
-
-SHA256 is deterministic, meaning:
-
-- Same input → Same hash output
-- Even a small change in input produces a completely different hash
+### Broken Chain
+If a transaction's `PreviousHash` link is altered to point to a different hash entirely, or if a previous transaction's payload was modified (causing its hash to change), the contiguous continuity is severed. The system will throw: `"Broken chain at Tx X"`.
 
 ---
 
-## Ledger Validation Logic
+## CLI Usage
 
-The ledger validation mechanism checks two conditions.
+The program provides an interactive, terminal-based CLI for manipulating and verifying the immutable structures.
 
-### 1. Hash Integrity Check
-
-The system recalculates the hash of each transaction and compares it with the stored hash.
-
-```
-RecalculatedHash == StoredHash
-```
-
-If they are different, the transaction has been modified.
-
-### 2. Hash Chain Continuity
-
-Each transaction must correctly reference the previous transaction's hash.
-
-```
-Current.PreviousHash == Previous.Hash
-```
-
-If this relationship is broken, the ledger becomes invalid.
+**Available Commands:**
+1. **Add Transaction**: Provide string data to securely append a new transaction onto the ledger.
+2. **View Ledger**: Print the sequential history of transactions alongside their precise hex-encoded Hashes.
+3. **Validate Ledger**: Run the self-verification integrity check on the live chain.
+4. **Corrupt Ledger**: Intentionally attack individual transactions to test the tamper detection threshold. Format `corrupt <index> <field>`. Valid fields are `data`, `hash`, or `prevhash`. Example: `corrupt 1 data`.
+5. **Replay Ledger**: Extract the live transactions and process them through the scratch-built Replay Engine.
+6. **Get Ledger Hash**: Snapshot and print the terminal transaction's hash (the cumulative identifier for the ledger).
+7. **Determinism Proof**: Automatically spin up parallel ledgers, feed them identical requests (`A → B → C`), and prove convergence on an identical terminal hash.
+8. **Replay Proof**: Automatically submit valid entries, verify positive structural replay, actively attack the chain state with targeted corruption, and prove the successful validation failure mechanism.
+9. **Exit**: Terminate session.
 
 ---
-
-## What the System Protects Against
-
-This deterministic ledger protects against several types of integrity violations.
-
-### Data Tampering
-
-If transaction data is modified after creation, the recalculated hash will not match the stored hash.
-
-**Example:**
-
-```
-Original Data: Austin Pays Arpit
-Modified Data: HACKED DATA
-```
-
-This causes validation to fail.
-
-### Hash Chain Manipulation
-
-If someone attempts to alter the hash chain manually, the ledger validation process detects the inconsistency.
-
-### Silent Data Modification
-
-Because every transaction is hashed and linked, any hidden modification will be detected during validation.
-
----
-
-## CLI Interface
-
-The program provides a simple command-line interface.
-
-**Menu options:**
-
-```
-1  Add Transaction
-2  View Ledger
-3  Validate Ledger
-4  Corrupt Ledger
-5  Exit
-```
-
-Users can:
-
-- Add new transactions
-- View the ledger
-- Validate ledger integrity
-- Simulate corruption to test tamper detection
-
----
-
-## Terminal Outputs
-
-### Adding Transactions
-
-![Add Transaction](outputs/Tx%20Added.png)
-
-### Viewing Ledger
-
-![View Ledger](outputs/Tx%20View.png)
-
-### Ledger Validation and Corruption
-
-![Valid Transaction](outputs/Tx%20Valid%20and%20Corrupted.png)
 
 ## Technologies Used
 
